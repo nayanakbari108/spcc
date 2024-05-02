@@ -1,0 +1,1079 @@
+-----------------(O) FIRST & FOLLOW ---------------
+
+def compute_first(grammar):
+    first = {}
+
+    def compute_first_rec(non_terminal):
+        if non_terminal in first:
+            return first[non_terminal]
+        first_set = set()
+        for production in grammar[non_terminal]:
+            if len(production) == 0 or production[0] == "#":
+                first_set.add("#")  # Add epsilon to FIRST set
+            elif production[0] not in grammar:
+                first_set.add(production[0])
+            else:
+                first_set |= compute_first_rec(production[0])
+        first[non_terminal] = first_set
+        return first_set
+
+    for non_terminal in grammar:
+        compute_first_rec(non_terminal)
+
+    return first
+
+
+def compute_follow(grammar, start_symbol):
+    follow = {non_terminal: set() for non_terminal in grammar}
+
+    # Adding $ (end of input) to follow of start symbol
+    follow[start_symbol].add("$")
+
+    # Helper function to compute follow recursively
+    def compute_follow_rec(non_terminal):
+        for nt in grammar:
+            for production in grammar[nt]:
+                if non_terminal in production:
+                    idx = production.index(non_terminal)
+                    if idx < len(production) - 1:
+                        next_symbol = production[idx + 1]
+                        if next_symbol not in grammar:
+                            follow[non_terminal].add(next_symbol)
+                        else:
+                            first_of_next = compute_first(grammar)[next_symbol]
+                            if "#" in first_of_next:
+                                follow[non_terminal] |= first_of_next - {"#"}
+                                follow[non_terminal] |= compute_follow_rec(next_symbol)
+                            else:
+                                follow[non_terminal] |= first_of_next
+                    else:
+                        if nt != non_terminal and nt != "":
+                            follow[non_terminal] |= compute_follow_rec(nt)
+        return follow[non_terminal]
+
+    # Computing follow sets recursively
+    for non_terminal in grammar:
+        compute_follow_rec(non_terminal)
+
+    return follow
+
+
+# Example grammar
+grammar = {"S": ["TF"], "F": ["+TF", "#"], "T": ["(S)", "id"]}
+
+start_symbol = "S"
+
+first = compute_first(grammar)
+follow = compute_follow(grammar, start_symbol)
+
+print("FIRST set:")
+for non_terminal in first:
+    print(non_terminal, ":", first[non_terminal])
+
+print("\nFOLLOW set:")
+for non_terminal in follow:
+    print(non_terminal, ":", follow[non_terminal])
+
+
+
+
+------------------(O) FIRST & FOLLOW INPUT ------------------
+
+def compute_first(grammar):
+    first = {}
+
+    def compute_first_rec(non_terminal):
+        if non_terminal in first:
+            return first[non_terminal]
+        first_set = set()
+        for production in grammar[non_terminal]:
+            if len(production) == 0 or production[0] == "#":
+                first_set.add("#")  # Add epsilon to FIRST set
+            elif production[0] not in grammar:
+                first_set.add(production[0])
+            else:
+                for symbol in production:
+                    if symbol != "#":
+                        first_of_symbol = compute_first_rec(symbol)
+                        first_set |= first_of_symbol
+                        if "#" not in first_of_symbol:
+                            break  # Stop if epsilon is not in the FIRST set of the symbol
+        first[non_terminal] = first_set
+        return first_set
+
+    for non_terminal in grammar:
+        compute_first_rec(non_terminal)
+
+    return first
+
+
+def compute_follow(grammar, start_symbol):
+    follow = {non_terminal: set() for non_terminal in grammar}
+
+    # Adding $ (end of input) to follow of start symbol
+    follow[start_symbol].add("$")
+
+    # Helper function to compute follow recursively
+    def compute_follow_rec(non_terminal):
+        for nt in grammar:
+            for production in grammar[nt]:
+                if non_terminal in production:
+                    idx = production.index(non_terminal)
+                    if idx < len(production) - 1:
+                        next_symbol = production[idx + 1]
+                        if next_symbol not in grammar:
+                            follow[non_terminal].add(next_symbol)
+                        else:
+                            first_of_next = compute_first(grammar)[next_symbol]
+                            if "#" in first_of_next:
+                                follow[non_terminal] |= first_of_next - {"#"}
+                                follow[non_terminal] |= compute_follow_rec(next_symbol)
+                            else:
+                                follow[non_terminal] |= first_of_next
+                    else:
+                        if nt != non_terminal and nt != "":
+                            follow[non_terminal] |= compute_follow_rec(nt)
+        return follow[non_terminal]
+
+    # Computing follow sets recursively
+    for non_terminal in grammar:
+        compute_follow_rec(non_terminal)
+
+    return follow
+
+
+def get_grammar_from_user():
+    grammar = {}
+    print(
+        "Enter grammar rules (one per line, non-terminal followed by productions separated by space, use '#' for epsilon, enter 'done' when finished):"
+    )
+    while True:
+        rule = input().strip()
+        if rule == "done":
+            break
+        non_terminal, productions = rule.split(maxsplit=1)
+        grammar[non_terminal] = productions.split()
+    return grammar
+
+
+# Get grammar from user
+grammar = get_grammar_from_user()
+
+start_symbol = input("Enter the start symbol: ")
+
+first = compute_first(grammar)
+follow = compute_follow(grammar, start_symbol)
+
+print("\nFIRST set:")
+for non_terminal in first:
+    print(non_terminal, ":", first[non_terminal])
+
+print("\nFOLLOW set:")
+for non_terminal in follow:
+    print(non_terminal, ":", follow[non_terminal])
+
+
+
+
+Enter grammar rules (one per line, non-terminal followed by productions separated by space, use '#' for epsilon, enter 'done' when finished):
+S TF
+F +TF #
+T (S) id
+done
+Enter the start symbol: S
+
+
+----------------(O) CODE OPTIMIZATION -----------------
+n=int(input('Enter number of operations '))
+S=[]
+for i in range(n) :
+    S.append(input())
+
+optimizer = []
+for i in range(len(S)) :
+    S[i] = S[i].split('=')
+    print(S[i])
+
+for i in range(len(S)) :
+    for j in range(i+1, len(S)) :
+        if S[i][1] in S[j][1] :
+            for k in range(j-1, i-1, -1) :
+                if S[j][1][1] in S[k][0] or S[j][1][5] in S[k][0] :
+                    break
+            else :
+                S[j][1] = S[i][0]
+    optimizer.append(S[i][0] + ' = ' + S[i][1])
+
+for i in optimizer :
+    print(i)
+
+
+
+-----------(O) LEXICAL IN PY --------------
+import re
+
+
+def lexical_analyzer(input_string):
+    keywords = {"float", "int", "if", "else", "while", "for"}
+    operators = {"+", "-", "*", "/", "=", "==", "!=", "<", ">", "<=", ">="}
+    delimiters = {" ", "\t", "\n", ";", ",", "(", ")", "{", "}"}
+
+    tokens = input_string.split()  # Tokenize input string
+
+    counts = {"Keywords": 0, "Operators": 0, "Identifiers": 0, "Delimiters": 0}
+
+    # Count and classify tokens
+    for token in tokens:
+        if token in keywords:
+            print(token + ": keyword")
+            counts["Keywords"] += 1
+        elif token in operators:
+            print(token + ": operator")
+            counts["Operators"] += 1
+        elif token in delimiters:
+            print(token + ": delimiter")
+            counts["Delimiters"] += 1
+        else:
+            # Check if it's an identifier	
+            if re.match(r"^[a-zA-Z_]\w*$", token):
+                print(token + ": identifier")
+                counts["Identifiers"] += 1
+
+    return counts
+
+
+# Input string
+input_string = "int x = b + c * ( a - b )"
+
+# input_string = input(
+#     "Enter input string: "
+# )  # "int x = 10; float y = 20; if (x > y) { y = x; } else { x = y; }
+
+# Analyze the input string
+counts = lexical_analyzer(input_string)
+
+# Print counts for each category
+for category, count in counts.items():
+    print("Count of", category + ":", count)
+
+
+
+-----------(O) LEXICAL IN PY INPUT --------------
+
+
+input_string = input(
+    "Enter input string: "
+) #replace this
+
+
+
+
+----------------(O) 3AC, ICG -------------------------
+# import re
+
+# j = 1
+# y = []
+# op = ["+", "-", "*", "/"]
+# x = input("Enter the expression: ")
+# m = re.split("([+-/*])", x)
+
+
+# def comp(m, j):
+#     for word in m:
+#         if word in op:
+#             y.append("".join(m[0:3]))
+#             m.pop(0)
+#             m.pop(0)
+#             m[0] = "t" + str(j)
+#             j += 1
+#     return m, j
+
+
+# while len(m) > 1:
+#     m, j = comp(m, j)
+# k = len(y)
+# y.reverse()
+# for i in range(0, len(y)):
+#     print("t" + str(k) + "=" + y[i])
+#     k -= 1
+
+# 2nd code
+import re
+
+
+def generate_intermediate_code(expression):
+    op = ["+", "-", "*", "/"]
+    j = 1
+    y = []
+    m = re.split("([+-/*])", expression)
+
+    def comp(m, j):
+        for idx, word in enumerate(m):
+            if word in op:
+                temp = "".join(m[idx - 1 : idx + 2])
+                y.append("t" + str(j) + " = " + temp)
+                m[idx - 1] = "t" + str(j)
+                m.pop(idx)
+                m.pop(idx)
+                j += 1
+                break
+        return m, j
+
+    while len(m) > 1:
+        m, j = comp(m, j)
+
+    y.reverse()
+    return y
+
+
+# Input expression
+expression = input("Enter the expression: ")
+
+# Generate intermediate code
+intermediate_code = generate_intermediate_code(expression)
+
+# Print intermediate code
+for code in intermediate_code:
+    print(code)
+
+
+
+
+--------- Assembler (MOT, POT, ST) -----------------
+from tabulate import tabulate
+
+# Class for Machine Opcode Table (MOT)
+class MOT:
+    def __init__(self):
+        # Define instructions with their opcodes and number of operands
+        self.instructions = {
+            "L": {"opcode": "00", "operands": 2},
+            "ST": {"opcode": "01", "operands": 2},
+            "A": {"opcode": "02", "operands": 2},
+            "S": {"opcode": "03", "operands": 2},
+            "M": {"opcode": "04", "operands": 2},
+            "D": {"opcode": "05", "operands": 2},
+            "JMP": {"opcode": "06", "operands": 1},
+            "HLT": {"opcode": "07", "operands": 0},
+        }
+
+    # Method to get instruction information based on mnemonic
+    def get_instruction(self, mnemonic):
+        return self.instructions.get(mnemonic, None)
+
+# Class for Pseudo Opcode Table (POT)
+class POT:
+    def __init__(self):
+        # Define pseudo-ops with their opcodes and number of operands
+        self.pseudo_ops = {
+            "START": {"opcode": "", "operands": 1},
+            "END": {"opcode": "", "operands": 0},
+            "DC": {"opcode": "", "operands": 1},
+            "DS": {"opcode": "", "operands": 1},
+            "USING": {"opcode": "", "operands": 2},  # Added USING as a pseudo-op with two operands
+        }
+
+    # Method to get pseudo-op information based on mnemonic
+    def get_pseudo_op(self, mnemonic):
+        return self.pseudo_ops.get(mnemonic, None)
+
+# Class for Symbol Table (ST)
+class SymbolTable:
+    def __init__(self):
+        self.table = {}  # Initialize symbol table as a dictionary
+
+    # Method to add a symbol and its address to the symbol table
+    def add_symbol(self, symbol, address):
+        self.table[symbol] = address
+
+    # Method to get the address of a symbol from the symbol table
+    def get_symbol_address(self, symbol):
+        return self.table.get(symbol, None)
+
+# Class for Assembler
+class Assembler:
+    def __init__(self):
+        self.mot = MOT()  # Initialize the Machine Opcode Table (MOT)
+        self.pot = POT()  # Initialize the Pseudo Opcode Table (POT)
+        self.st = SymbolTable()  # Initialize the Symbol Table (ST)
+
+    # Method to assemble the source code and generate machine code
+    def assemble(self, source_code):
+        machine_code = []  # Initialize list to store machine code
+        address = 0  # Initialize address
+        for line in source_code:
+            parts = line.split()  # Split line into parts
+            mnemonic = parts[0]  # First part is the mnemonic
+            if mnemonic in self.mot.instructions:  # Check if mnemonic is in MOT
+                instruction = self.mot.get_instruction(mnemonic)  # Get instruction information
+                if instruction["operands"] == 1:
+                    operands = parts[1:]
+                    if len(operands) != instruction["operands"]:
+                        raise ValueError(
+                            f"Invalid number of operands for {mnemonic} instruction."
+                        )
+                    machine_code.append(instruction["opcode"] + "".join(operands))
+                elif instruction["operands"] == 2:
+                    operands = parts[1].split(",")
+                    if len(operands) != instruction["operands"]:
+                        raise ValueError(
+                            f"Invalid number of operands for {mnemonic} instruction."
+                        )
+                    machine_code.append(instruction["opcode"] + "".join(operands))
+            elif mnemonic in self.pot.pseudo_ops:  # Check if mnemonic is in POT
+                pseudo_op = self.pot.get_pseudo_op(mnemonic)  # Get pseudo-op information
+                if mnemonic == "START":
+                    address = int(parts[1])  # Set address
+                elif mnemonic == "END":
+                    break
+                elif mnemonic == "DC":
+                    machine_code.append(parts[1])
+                elif mnemonic == "DS":
+                    address += int(parts[1])
+                elif mnemonic == "USING":
+                    continue  # Ignore USING instruction for now
+                else:
+                    raise ValueError(f"Unknown pseudo-operation: {mnemonic}")
+            else:
+                if mnemonic not in self.st.table:
+                    self.st.add_symbol(mnemonic, address)
+                else:
+                    raise ValueError(f"Duplicate symbol found: {mnemonic}")
+        return machine_code
+
+    # Method to print the Pseudo Opcode Table
+    def print_pseudo_op_table(self):
+        table = []
+        print("Pseudo Opcode Table:")
+        for op, info in self.pot.pseudo_ops.items():
+            table.append([op, ""])
+
+        print(tabulate(table, headers=["Pseudo Opcode", "Address"], tablefmt="github"))
+
+    # Method to print the Symbol Table
+    def print_symbol_table(self):
+        table = []
+        print("Symbol Table:")
+        lc = 12
+        for symbol, address in self.st.table.items():
+            if symbol[:2] in "PG":
+                table.append([symbol, 0, 1, "R"])
+            else:
+                table.append([symbol, lc, 4, "R"])
+                lc += 4
+        print(
+            tabulate(
+                table, headers=["Symbol", "Value", "Length", "R|A"], tablefmt="github"
+            )
+        )
+
+    # Method to print the Machine Opcode Table
+    def print_machine_table(self, source_code):
+        table = []
+        instructions = ["L", "A", "ST", "S", "M", "D"]
+        print("Machine Opcode Table:")
+        for code in source_code:
+            if code.split()[0] in instructions:
+                table.append([code.split()[0], "", "", "RX"])
+        print(
+            tabulate(
+                table,
+                headers=[
+                    "Machine Opcode",
+                    "Binary Opcode",
+                    "Instruction Length",
+                    "Instruction Format",
+                ],
+                tablefmt="github",
+            )
+        )
+
+# Example usage
+source_code = [
+    "PG1 START 0",
+    "USING *,15",
+    "L 1, FIVE",
+    "A 1, FOUR",
+    "ST 1, TEMP",
+    "FOUR DC 4",
+    "FIVE DC 5",
+    "TEMP DS 1",
+    "END",
+]
+assembler = Assembler()
+machine_code = assembler.assemble(source_code)
+
+assembler.print_pseudo_op_table()
+assembler.print_symbol_table()
+assembler.print_machine_table(source_code)
+
+
+
+------------(O) QUADRAPULE, TRIPLE, ICG -----------------
+
+import re
+
+def generate_quadruple_representation(expression):
+    op = ["+", "-", "*", "/"]
+    j = 1
+    quadruples = []
+    m = re.split("([+-/*])", expression)
+
+    def comp(m, j):
+        for idx, word in enumerate(m):
+            if word in op:
+                left_operand = m[idx - 1]
+                right_operand = m[idx + 1]
+                result = "t" + str(j)
+                quadruples.append((m[idx], left_operand, right_operand, result))
+                m[idx] = result
+                m.pop(idx + 1)
+                m.pop(idx - 1)
+                j += 1
+                break
+        return m, j
+
+    while len(m) > 1:
+        m, j = comp(m, j)
+
+    return quadruples
+
+def generate_triple_representation(expression):
+    op = ["+", "-", "*", "/"]
+    j = 1
+    triples = []
+    m = re.split("([+-/*])", expression)
+
+    def comp(m, j):
+        for idx, word in enumerate(m):
+            if word in op:
+                left_operand = m[idx - 1]
+                right_operand = m[idx + 1]
+                triples.append((left_operand, m[idx], right_operand))
+                m.pop(idx + 1)
+                m.pop(idx - 1)
+                j += 1
+                break
+        return m, j
+
+    while len(m) > 1:
+        m, j = comp(m, j)
+
+    return triples
+
+def generate_intermediate_code(expression):
+    op = ["+", "-", "*", "/"]
+    j = 1
+    intermediate_code = []
+    m = re.split("([+-/*])", expression)
+
+    def comp(m, j):
+        for idx, word in enumerate(m):
+            if word in op:
+                temp = "".join(m[idx - 1 : idx + 2])
+                intermediate_code.append("t" + str(j) + " = " + temp)
+                m[idx - 1] = "t" + str(j)
+                m.pop(idx)
+                m.pop(idx)
+                j += 1
+                break
+        return m, j
+
+    while len(m) > 1:
+        m, j = comp(m, j)
+
+    intermediate_code.reverse()
+    return intermediate_code
+
+# Input expression
+expression = input("Enter the expression: ")
+
+# Generate quadruple representation
+quadruples = generate_quadruple_representation(expression)
+
+# Generate triple representation
+triples = generate_triple_representation(expression)
+
+# Generate intermediate code
+intermediate_code = generate_intermediate_code(expression)
+
+# Print quadruple representation
+print("Quadruple Representation:")
+for quad in quadruples:
+    print(quad)
+
+# Print triple representation
+print("\nTriple Representation:")
+for triple in triples:
+    print(triple)
+
+# Print intermediate code
+print("\nIntermediate Code:")
+for code in intermediate_code:
+    print(code)
+
+
+
+------------(O) QUADRAPULE, TRIPLE -----------------
+
+import re
+
+
+def generate_quadruple_representation(expression):
+    op = ["+", "-", "*", "/"]
+    j = 1
+    quadruples = []
+    m = re.split("([+-/*])", expression)
+
+    def comp(m, j):
+        for idx, word in enumerate(m):
+            if word in op:
+                left_operand = m[idx - 1]
+                right_operand = m[idx + 1]
+                result = "t" + str(j)
+                quadruples.append((m[idx], left_operand, right_operand, result))
+                m[idx] = result
+                m.pop(idx + 1)
+                m.pop(idx - 1)
+                j += 1
+                break
+        return m, j
+
+    while len(m) > 1:
+        m, j = comp(m, j)
+
+    return quadruples
+
+
+def generate_triple_representation(expression):
+    op = ["+", "-", "*", "/"]
+    j = 1
+    triples = []
+    m = re.split("([+-/*])", expression)
+
+    def comp(m, j):
+        for idx, word in enumerate(m):
+            if word in op:
+                left_operand = m[idx - 1]
+                right_operand = m[idx + 1]
+                triples.append((left_operand, m[idx], right_operand))
+                m.pop(idx + 1)
+                m.pop(idx - 1)
+                j += 1
+                break
+        return m, j
+
+    while len(m) > 1:
+        m, j = comp(m, j)
+
+    return triples
+
+
+# Input expression
+expression = input("Enter the expression: ")
+
+# Generate quadruple representation
+quadruples = generate_quadruple_representation(expression)
+
+# Generate triple representation
+triples = generate_triple_representation(expression)
+
+# Print quadruple representation
+print("Quadruple Representation:")
+for quad in quadruples:
+    print(quad)
+
+# Print triple representation
+print("\nTriple Representation:")
+for triple in triples:
+    print(triple)
+
+
+
+------------(O) QUADRAPULE, TRIPLE ADV -----------------
+
+import re
+
+# Function to generate temporary variables
+def generate_temp(temp_count):
+    temp = f"t{temp_count}"
+    temp_count += 1
+    return temp, temp_count
+
+# Function to generate a quadruple tuple
+def generate_quadruple(op, arg1=None, arg2=None, result=None):
+    return (op, arg1, arg2, result)
+
+# Function to generate a triple tuple
+def generate_triple(op, arg1=None, arg2=None):
+    return (op, arg1, arg2)
+
+# Function to generate quadruples and triples from an expression
+def generate_code(expression):
+    # Initialize temporary variable count, quadruples, and triples
+    temp_count = 1
+    quadruples = []
+    triples = []
+
+    # Split the expression into the result and the expression itself
+    result, expr = map(str.strip, expression.split("="))
+
+    # Initialize stacks for operands and operators
+    stack = []
+    op_stack = []
+
+    # Iterate through each character in the expression
+    for token in expr:
+        if token.isalnum():  # If token is alphanumeric, it's an operand
+            stack.append(token)
+        elif token in "+-*/":  # If token is an operator
+            op_stack.append(token)
+        elif token == ")":  # If token is a closing parenthesis
+            # Pop the operator from the stack
+            op = op_stack.pop()
+            # Pop two operands from the stack
+            arg2, arg1 = stack.pop(), stack.pop()
+            # Generate a temporary variable
+            temp, temp_count = generate_temp(temp_count)
+            # Generate quadruple and triple for the operation
+            quadruples.append(generate_quadruple(op, arg1, arg2, temp))
+            triples.append(generate_triple(op, arg1, arg2))
+            # Push the temporary variable onto the stack
+            stack.append(temp)
+
+    # If there are pending multiplications or divisions
+    if op_stack and op_stack[-1] in "*/":
+        # Pop the operator from the stack
+        op = op_stack.pop()
+        # Pop two operands from the stack
+        arg2, arg1 = stack.pop(), stack.pop()
+        # Generate a temporary variable
+        temp, temp_count = generate_temp(temp_count)
+        # Generate quadruple and triple for the operation
+        quadruples.append(generate_quadruple(op, arg1, arg2, temp))
+        triples.append(generate_triple(op, arg1, arg2))
+        # Push the temporary variable onto the stack
+        stack.append(temp)
+
+    # Generate quadruple for the final assignment
+    quadruples.append(generate_quadruple("=", stack.pop(), result=result))
+
+    # Return the generated quadruples and triples
+    return quadruples, triples
+
+# Function to display quadruples
+def display_quadruples(quadruples):
+    print("Quadruples:")
+    for quad in quadruples:
+        print(quad)
+
+# Function to display triples
+def display_triples(triples):
+    print("\nTriples:")
+    for triple in triples:
+        print(triple)
+
+# Main function
+if __name__ == "__main__":
+    # Example expression
+    expression = "a = (e - b) * (c + d)"
+    # Generate quadruples and triples
+    quadruples, triples = generate_code(expression)
+    # Display quadruples
+    display_quadruples(quadruples)
+    # Display triples
+    display_triples(triples)
+
+
+------------ QUADRAPULE, TRIPLE ADV -----------------
+
+
+
+
+
+
+--------- BT, ST, LT, Assembler ------------
+from tabulate import tabulate
+
+class SymbolTable:
+    def __init__(self):
+        self.table = {}
+    def add_symbol(self, symbol, address):
+        self.table[symbol] = address
+    def get_symbol_address(self, symbol):
+        return self.table.get(symbol, None)
+    def print_table(self):
+        table = []
+        print("Symbol Table:")
+        lc = 12
+        for symbol, address in self.table.items():
+            if symbol[:2] in 'PG' :
+                table.append([symbol, 0, 1, "R"])
+            else :
+                table.append([symbol, lc, 4, "R"])
+                lc += 4
+        print(tabulate(table, headers = ["Symbol", "Value", "Length", "R|A"], tablefmt="github"))
+class LiteralTable:
+    def __init__(self):
+        self.table = {}
+    def add_literal(self, literal, address):
+        self.table[literal] = address
+    def get_literal_address(self, literal):
+        return self.table.get(literal, None)
+    def print_table(self):
+        print("Literal Table:")
+        table = []
+        length = (len(source_code)) * 4
+        for literal, address in self.table.items():
+            table.append([literal, length, 4, "R"])
+        print(tabulate(table, headers = ["Literal", "Value", "Length", "R|A"], tablefmt="github"))
+class BaseTable:
+    def __init__(self):
+        self.table = {}
+    def add_base(self, base_register, base_address):
+        self.table[base_register] = base_address
+    def get_base_address(self, base_register):
+        return self.table.get(base_register, None)
+    def print_table(self):
+        print("Base Table:")
+        table = []
+        for base_register, base_address in self.table.items():
+            table.append([base_address, 1])
+        print(tabulate(table, headers = ['availability of indicator', 'Content of BR'], tablefmt="github"))
+def process_directives(source_code):
+    symbol_table = SymbolTable()
+    literal_table = LiteralTable()
+    base_table = BaseTable()
+    for line in source_code:
+        parts = line.split()
+        directive = parts[0]
+        if directive == "ST":
+            symbol_table.add_symbol(parts[1], int(parts[2]))
+        elif directive == "LT":
+            literal_table.add_literal(parts[1], int(parts[2]))
+        elif directive == "USING":
+            base_table.add_base(parts[1], int(parts[2]))
+        elif directive == "=":
+            literal = parts[0]
+            value = int(parts[1][1:])  # Remove the '=' and parse the value
+            literal_table.add_literal(literal, value)
+    symbol_table.print_table()
+    literal_table.print_table()
+    base_table.print_table()
+# Example usage
+source_code = [
+    "ST A 100",
+    "ST B 200",
+    "LT =1 300",
+    "LT =2 400",
+    "USING * 15"
+]
+process_directives(source_code)
+
+
+----------- LEX KEYWORD, IDENTIFIERS ----------
+%{ 
+int n = 0 ; 
+%} 
+%% 
+"while"|"if"|"else" {n++;printf("\t keywords : %s", yytext);} 
+"int"|"float" {n++;printf("\t keywords : %s", yytext);} 
+[a-zA-Z_][a-zA-Z0-9_]* {n++;printf("\t identifier : %s", yytext);} 
+"<="|"=="|"="|"++"|"-"|"*"|"+" {n++;printf("\t operator : %s", yytext);} 
+[(){}|, ;] {n++;printf("\t separator : %s", yytext);} 
+[0-9]*"."[0-9]+ {n++;printf("\t float : %s", yytext);} 
+[0-9]+ {n++;printf("\t integer : %s", yytext);}						 
+"end" {printf("\n total no. of token = %d\n", n);} 
+%% 
+int main() 
+{ 
+	yylex(); 
+}
+int yywrap () {
+	return 1;
+}
+
+Follow this below flow:->
+1. gedit demo.l
+2. flex demo.l
+3. gcc lex.yy.c
+4. ./a.out (in ubuntu)
+4. a.exe (in windows)
+5. int i = 1000;
+
+------------- MACROPROCESSOR (F) -------------
+
+from tabulate import tabulate
+
+
+# Function to define a macro
+def define_macro(mnt, mdt, ala, macro_name, macro_body, macro_args):
+    mnt_entry = {
+        "Index": len(mnt) + 1,
+        "MacroName": macro_name,
+        "MDT_Index": len(mdt) + 1,
+    }
+    mnt.append(mnt_entry)
+
+    for line in macro_body:
+        mdt_entry = {"Index": len(mdt) + 1, "Macro_Definition": line}
+        mdt.append(mdt_entry)
+
+    for arg in macro_args:
+        ala_entry = {"Index": len(ala) + 1, "Argument": arg}
+        ala.append(ala_entry)
+
+
+# Function to list MNT, MDT, and ALA tables
+def list_tables(mnt, mdt, ala):
+    print("Macro Name Table (MNT):")
+    print(tabulate(mnt, headers="keys", tablefmt="grid"))
+
+    print("\nMacro Definition Table (MDT):")
+    print(tabulate(mdt, headers="keys", tablefmt="grid"))
+
+    print("\nArgument List Array (ALA):")
+    print(tabulate(ala, headers="keys", tablefmt="grid"))
+
+
+# Function to process a macro
+def process_macro(mnt, mdt, macro_name, arg_lists):
+    mnt_entry = next((entry for entry in mnt if entry["MacroName"] == macro_name), None)
+    if not mnt_entry:
+        print(f"Macro '{macro_name}' not found!")
+        return
+
+    mdt_index = mnt_entry["MDT_Index"]
+    mdt_entries = mdt[mdt_index - 1 :]
+
+    macro_body = []
+    for entry in mdt_entries:
+        if "MEND" in entry["Macro_Definition"]:
+            break
+        macro_body.append(entry["Macro_Definition"])
+
+    expanded_macros = []
+    for arg_values in arg_lists:
+        expanded_macro = []
+        for line in macro_body:
+            if line.startswith("MACRO"):
+                continue
+            expanded_line = line
+            for arg_name, arg_value in zip(macro_args, arg_values):
+                expanded_line = expanded_line.replace(arg_name, arg_value)
+            expanded_macro.append(expanded_line)
+
+        expanded_macros.append(expanded_macro)
+
+    for expanded_macro in expanded_macros:
+        for line in expanded_macro:
+            print(line)
+
+
+# Initialize MNT, MDT, and ALA
+mnt = []
+mdt = []
+ala = []
+
+# Define a macro
+macro_body = ["MACRO INCR &ARG1, &ARG2", "A 1, &ARG1", "A 2, &ARG2", "MEND"]
+macro_args = ["&ARG1", "&ARG2"]
+define_macro(mnt, mdt, ala, "INCR", macro_body, macro_args)
+
+# List tables
+list_tables(mnt, mdt, ala)
+
+# Process the defined macro
+arg_lists = [["DATA1", "DATA2"], ["DATA3", "DATA4"]]
+process_macro(mnt, mdt, "INCR", arg_lists)
+
+
+
+
+------------- MACROPROCESSOR (C) -------------
+from tabulate import tabulate  # To format tables
+
+class MacroProcessor:
+    def __init__(self):
+        self.mnt = []
+        self.mdt = []
+        self.ala = []
+    
+    def define_macro(self, macro_name, macro_body, macro_args):
+        mnt_entry = {
+            'Index': len(self.mnt) + 1,
+            'MacroName': macro_name,
+            'MDT_Index': len(self.mdt) + 1
+        }
+        self.mnt.append(mnt_entry)
+        
+        for line in macro_body:
+            mdt_entry = {
+                'Index': len(self.mdt) + 1,
+                'Macro_Definition': line
+            }
+            self.mdt.append(mdt_entry)
+        
+        for arg in macro_args:
+            ala_entry = {
+                'Index': len(self.ala) + 1,
+                'Argument': arg
+            }
+            self.ala.append(ala_entry)
+    
+    def list_tables(self):
+        print("Macro Name Table (MNT):")
+        print(tabulate(self.mnt, headers="keys", tablefmt="grid"))
+        
+        print("\nMacro Definition Table (MDT):")
+        print(tabulate(self.mdt, headers="keys", tablefmt="grid"))
+        
+        print("\nArgument List Array (ALA):")
+        print(tabulate(self.ala, headers="keys", tablefmt="grid"))
+    
+    def process_macro(self, macro_name, arg_lists):
+        mnt_entry = next((entry for entry in self.mnt if entry['MacroName'] == macro_name), None)
+        if not mnt_entry:
+            print(f"Macro '{macro_name}' not found!")
+            return
+        
+        mdt_index = mnt_entry['MDT_Index']
+        mdt_entries = self.mdt[mdt_index - 1:]
+        
+        macro_body = []
+        for entry in mdt_entries:
+            if "MEND" in entry['Macro_Definition']:
+                break
+            macro_body.append(entry['Macro_Definition'])
+        
+        expanded_macros = []
+        for arg_values in arg_lists:
+            expanded_macro = []
+            for line in macro_body:
+                if line.startswith("MACRO"):
+                    continue
+                expanded_line = line
+                for arg_name, arg_value in zip(macro_args, arg_values):
+                    expanded_line = expanded_line.replace(arg_name, arg_value)
+                expanded_macro.append(expanded_line)
+            
+            expanded_macros.append(expanded_macro)
+
+        for expanded_macro in expanded_macros:
+            for line in expanded_macro:
+                print(line)
+
+processor = MacroProcessor()
+
+macro_body = ["MACRO INCR &ARG1, &ARG2", "A 1, &ARG1", "A 2, &ARG2", "MEND"]
+macro_args = ["&ARG1", "&ARG2"]
+processor.define_macro("INCR", macro_body, macro_args)
+
+processor.list_tables()
+
+arg_lists = [
+    ["DATA1", "DATA2"],
+    ["DATA3", "DATA4"]
+]
+
+processor.process_macro("INCR", arg_lists)
