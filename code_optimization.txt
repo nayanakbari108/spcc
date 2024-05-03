@@ -1,0 +1,67 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<char> operators{'+', '-', '*', '/'};
+
+int main(){
+	double i = 1;
+    string user_input;
+    vector<string> input, output;
+    unordered_map<double, bool> present;
+	unordered_map<char, double> assignment;
+	unordered_map<string, char> expression;
+    cout << "Enter the arithmetic expressions, and type 'end' when finished:\n";
+    while(getline(cin, user_input) && user_input != "end"){
+        input.push_back(user_input);
+        if(assignment.find(user_input[4]) == assignment.end()){
+        	while(present.find(i) != present.end()){
+				i++;
+			}
+        	present[i] = true;
+        	assignment[user_input[4]] = i++;
+		}
+		if(assignment.find(user_input[8]) == assignment.end()){
+        	while(present.find(i) != present.end()){
+				i++;
+			}
+			present[i] = true;
+        	assignment[user_input[8]] = i++;
+		}
+		present.erase(assignment[user_input[0]]);
+		char op = user_input[6];
+		if(op == operators[0]){
+			assignment[user_input[0]] = assignment[user_input[4]] + assignment[user_input[8]];
+		}else if(op == operators[1]){
+			assignment[user_input[0]] = assignment[user_input[4]] - assignment[user_input[8]];
+		}else if(op == operators[2]){
+			assignment[user_input[0]] = assignment[user_input[4]] * assignment[user_input[8]];
+		}else{
+			assignment[user_input[0]] = assignment[user_input[4]] / assignment[user_input[8]];
+		}
+		present[assignment[user_input[0]]] = true;
+
+		// Eliminating CSE (Common Sub-expressions)
+		string value = user_input.substr(4);
+		if(expression.find(value) != expression.end()){
+			if(assignment[user_input[0]] == assignment[expression[value]]){
+				string s = "";
+				s.push_back(user_input[0]);
+				s += " = ";
+				s.push_back(expression[value]);
+				output.push_back(s);
+			}else{
+				output.push_back(user_input);
+				expression[value] = user_input[0];
+			}
+		}else{
+			output.push_back(user_input);
+			expression[value] = user_input[0];
+		}
+    }
+    cout << "\nThe optimized arithmetic expressions are:\n";
+    for(const string& expr : output){
+        cout << expr << endl;
+    }
+
+    return 0;
+}
